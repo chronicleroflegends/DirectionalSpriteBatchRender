@@ -1,3 +1,15 @@
+bl_info = {
+    "name": "Chrono's Directional Sprite Batch Render",
+    "author": "Chronicler of Legends",
+    "version": (1, 0),
+    "blender": (2, 90, 1),
+    "location": "Properties > Output > Chrono's Directional Sprite Renderer",
+    "description": "Toolset for creating sprites for 2.5d games.",
+    "warning": "",
+    "doc_url": "https://github.com/chronicleroflegends/DirectionalSpriteBatchRender",
+    "category": "Render",
+}
+
 # Addon to make sprite rendering for games simple.
 # Configured for GZDoom
 # Author:  Chronicler of Legends
@@ -37,16 +49,40 @@ def Create_RO(self, context):
     bpy.ops.transform.rotate(value=1.5708, orient_axis='X', orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(True, False, False), mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.620921, use_proportional_connected=False, use_proportional_projected=False)
     bpy.ops.transform.resize(value=(6.5, 6.5, 6.5), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.620921, use_proportional_connected=False, use_proportional_projected=False)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-
     # parent the object
-    bpy.data.objects[active_object].select_set(True)
-    bpy.context.view_layer.objects.active = bpy.data.objects[active_object]
+    bpy.data.objects[active_object.name].select_set(True)
+    bpy.context.view_layer.objects.active = bpy.data.objects[active_object.name]
     bpy.data.objects["RotationOrigin"].select_set(True)
     bpy.context.view_layer.objects.active = bpy.data.objects["RotationOrigin"]
     bpy.ops.object.parent_set(type='OBJECT')
     
+def Create_SC(self, context):
+    # store reference to active object
+    active_object = context.active_object
+    if active_object is None:
+        self.report({"WARNING"}, "No object selected.")
+        return {"CANCELLED"}
+    # create camera
+    bpy.context.scene.cursor.location = active_object.location
+    bpy.context.scene.cursor.location[2] = 0
+    camera = bpy.ops.object.camera_add(enter_editmode=False, align='WORLD', location=(0, 6.5, 3), rotation=(((pi*-90)/180), ((pi*180)/180), 0), scale=(1, 1, 1))
+    bpy.context.active_object.name = 'SpriteCamera'
+    target = bpy.ops.object.empty_add(type='SPHERE', align='WORLD', location=(0, 0, 1), scale=(1, 1, 1))
+    bpy.context.active_object.name = 'CameraTarget'
+    bpy.data.objects['CameraTarget'].select_set(True)
+    bpy.context.view_layer.objects.active = bpy.data.objects['CameraTarget']
+    bpy.data.objects['SpriteCamera'].select_set(True)
+    bpy.context.view_layer.objects.active = bpy.data.objects['SpriteCamera']
+    bpy.ops.object.constraint_add_with_targets(type='TRACK_TO')
+
+    
 def Do_Render(self, context):
+    if(bpy.context.scene.render.film_transparent == False):
+        self.report({"WARNING"}, "Background is not set to transparent.")
+        return {"CANCELLED"}
+    
     # Select the rotation origin
+    bpy.ops.object.select_all(action='DESELECT')
     try:
         bpy.data.objects["RotationOrigin"].select_set(True)
         bpy.context.view_layer.objects.active = bpy.data.objects['RotationOrigin']
@@ -92,20 +128,19 @@ def Do_Render(self, context):
         # reset frame
         bpy.context.scene.frame_current = startFrame
 
-## SETTING UP THE LOOPS!!!
 
 # Create Operators
 class Make_Transparent_Operator(bpy.types.Operator):
-    """Tooltip"""
+    """Set the render to have a transparent background"""
     bl_idname = "spriterender.settransparent"
-    bl_label = "Set render background to transparent"
+    bl_label = "Set render transparent"
 
     def execute(self, context):
         Make_Transparent(context)
         return {'FINISHED'}
     
 class Set_Angle_1_Operator(bpy.types.Operator):
-    """Tooltip"""
+    """Only render from 1 direction"""
     bl_idname = "spriterender.setangle1"
     bl_label = "1 DIR"
 
@@ -114,7 +149,7 @@ class Set_Angle_1_Operator(bpy.types.Operator):
         return {'FINISHED'}
     
 class Set_Angle_8_Operator(bpy.types.Operator):
-    """Tooltip"""
+    """Render from 8 directions (default Doom)"""
     bl_idname = "spriterender.setangle8"
     bl_label = "8 DIR"
 
@@ -123,7 +158,7 @@ class Set_Angle_8_Operator(bpy.types.Operator):
         return {'FINISHED'}
     
 class Set_Angle_16_Operator(bpy.types.Operator):
-    """Tooltip"""
+    """Render from 16 directions (ZDoom)"""
     bl_idname = "spriterender.setangle16"
     bl_label = "16 DIR"
 
@@ -132,28 +167,37 @@ class Set_Angle_16_Operator(bpy.types.Operator):
         return {'FINISHED'}
     
 class Do_Render_Operator(bpy.types.Operator):
-    """Tooltip"""
+    """Render the animation with current settings"""
     bl_idname = "spriterender.render"
-    bl_label = "Render the current animation"
+    bl_label = "Render"
 
     def execute(self, context):
         Do_Render(self, context)
         return {'FINISHED'}
     
 class Create_RO_Operator(bpy.types.Operator):
-    """Tooltip"""
+    """Create and set up Rotation Origin"""
     bl_idname = "spriterender.createro"
-    bl_label = "Create and assign rotation origin"
+    bl_label = "Create RotationOrigin"
     
     def execute(self, context):
         Create_RO(self, context)
+        return {'FINISHED'}
+    
+class Create_SC_Operator(bpy.types.Operator):
+    """Create and set up Sprite Camera"""
+    bl_idname = "spriterender.createsc"
+    bl_label = "Create SpriteCamera"
+    
+    def execute(self, context):
+        Create_SC(self, context)
         return {'FINISHED'}
 
 
 # === Create Panel ====================================================
 class SpriteRenderPanel(bpy.types.Panel):
     """Creates a Panel in the scene context of the properties editor"""
-    bl_label = "Sprite Renderer"
+    bl_label = "Chrono's Directional Sprite Renderer"
     bl_idname = "SCENE_PT_layout"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
@@ -163,6 +207,7 @@ class SpriteRenderPanel(bpy.types.Panel):
         layout = self.layout
 
         scene = context.scene
+        resolution = context.scene.render
         
         row = layout.row()
         row.scale_y = 1.0
@@ -171,7 +216,10 @@ class SpriteRenderPanel(bpy.types.Panel):
         row = layout.row()
         row.scale_y = 1.0
         row.operator("spriterender.createro")
-        row.label(text="not working")
+        
+        row = layout.row()
+        row.scale_y = 1.0
+        row.operator("spriterender.createsc")
         
         row = layout.row()
         row.prop(context.scene, 'sprite_export_path')
@@ -191,9 +239,14 @@ class SpriteRenderPanel(bpy.types.Panel):
         row.prop(context.scene, 'sprite_framenames')
 
         row = layout.row(align=True)
-        row.label(text="Timeline frames to render:")
+        row.label(text="Animation:")
         row.prop(scene, "frame_start")
         row.prop(scene, "frame_end")
+        
+        row = layout.row(align=True)
+        row.label(text="Resolution:")
+        row.prop(resolution, "resolution_x")
+        row.prop(resolution, "resolution_y")
 
         # Execute render
         row = layout.row()
@@ -209,6 +262,7 @@ spriterenderer_classes = [
     Set_Angle_16_Operator,
     Do_Render_Operator,
     Create_RO_Operator,
+    Create_SC_Operator,
     SpriteRenderPanel
 ]
 
