@@ -42,6 +42,9 @@
  15) Now go on and use this to render your own sprites. Make some cool games for me to play!
 
 ### Details of each of the addon's functions:
+* Set Render Transparent - I always forget to change the render background to transparent, so I made a button so you don't have to go searching for it!
+* Create RotationOrigin - This creates an empty with a circle shape to act as a turntable for your object. The selected object gets parented to this. Select your rig if it is an animated character model.
+* Create SpriteCamera - This is completely optional. If you have your own camera setup already, use that instead. This just sets up a simple targeted camera in roughly the right position.
 * Sprite Export Path - This is just the folder to generate your sprites in.
 * Sprite Prefix - This is the general name of your sprites. All the generated sprites will start with this prefix. It's default is 'SPRI' because it is setup in ZDoom's sprite format, which is: SPRIA1 - Prefix|Frame|Angle. In the ZDoom engine, the prefix can only be 4 characters, if you are using this for any other game engine, feel free to use as many characters as you want for the prefix.
 * Angles to render - How many directions do you want to render the object from? 1 Direction will only give you the camera view for each frame. 8 direction gives you the standard doom billboard sprites. 16 Dir gives a more detailed billboard sprite.
