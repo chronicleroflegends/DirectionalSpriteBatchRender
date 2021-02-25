@@ -52,3 +52,6 @@
 * Render - This sets it all in motion. Remember, don't get scared when Blender stops responding! Its just working to get all that rendering done for you in the background.
 
 ### License:
+GNU General Public License v3.0
+
+You are free to do whatever you want with this, no need to credit me. Just use it to make some cool stuff!
