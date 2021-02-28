@@ -34,6 +34,12 @@ angle_style_text = angle_style_doom8
 def Make_Transparent(context):
     bpy.context.scene.render.film_transparent = True
     
+def Set_AA_On(self, context):
+    bpy.context.scene.render.filter_size = 1.5
+    
+def Set_AA_Off(self, context):
+    bpy.context.scene.render.filter_size = 0.01
+    
 def Set_Angle_1(context):
     bpy.context.scene.sprite_angles = 1
     
@@ -130,45 +136,45 @@ def Do_Render(self, context):
         if ((endFrame - startFrame) > 26):
             self.report({"WARNING"}, "Too many frames in this animation (26+). Try splitting  it into multiple.")
             return {"CANCELLED"}
-    else:
-        #iterate through frames
-        for frame in range (startFrame, (endFrame+1)):
-            # Decide the frame name
-            #framename = bpy.context.scene.sprite_framenames[currentFrame]
-            if (bpy.context.scene.sprite_framestyle == 1):
-                framename = frame_style_letter[currentFrame]
-            if (bpy.context.scene.sprite_framestyle == 2):
-                framename = str(currentFrame) + '_'
-            
-            for angle in range (0, numAngles):
-                # Decide the angle name
-                if (bpy.context.scene.sprite_anglestyle == 1):
-                    if (numAngles != 8):
-                        self.report({"WARNING"}, "To use this angle style you must use EXACTLY 8 angles")
-                        return {"CANCELLED"}
-                    angleOutput = angle_style_doom8[angle]
-                if (bpy.context.scene.sprite_anglestyle == 2):
-                    if (numAngles != 16):
-                        self.report({"WARNING"}, "To use this angle style you must use EXACTLY 16 angles")
-                        return {"CANCELLED"}
-                    angleOutput = angle_style_doom16[angle]
-                if (bpy.context.scene.sprite_anglestyle == 3):
-                    angleOutput = str(angle + 1)
-
-                #Render this frame
-                bpy.context.scene.render.filepath = ("%s%s%s%s" % (path, prefix, framename, angleOutput))
-                #bpy.context.scene.render.filepath = ("%s%s%s%i" % (path, prefix, frame, angleOutput))
-                bpy.ops.render.render(animation=False, write_still=True)
-                
-                # Rotate the object
-                bpy.ops.transform.rotate(value=angleInc, orient_axis='Z', orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, False, True), mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.620921, use_proportional_connected=False, use_proportional_projected=False)
-            
-            # Go to next frame
-            bpy.context.scene.frame_current += 1
-            currentFrame += 1 # do we need this?
+    
+    #iterate through frames
+    for frame in range (startFrame, (endFrame+1)):
+        # Decide the frame name
+        #framename = bpy.context.scene.sprite_framenames[currentFrame]
+        if (bpy.context.scene.sprite_framestyle == 1):
+            framename = frame_style_letter[currentFrame]
+        if (bpy.context.scene.sprite_framestyle == 2):
+            framename = str(currentFrame) + '_'
         
-        # reset frame
-        bpy.context.scene.frame_current = startFrame
+        for angle in range (0, numAngles):
+            # Decide the angle name
+            if (bpy.context.scene.sprite_anglestyle == 1):
+                if (numAngles != 8):
+                    self.report({"WARNING"}, "To use this angle style you must use EXACTLY 8 angles")
+                    return {"CANCELLED"}
+                angleOutput = angle_style_doom8[angle]
+            if (bpy.context.scene.sprite_anglestyle == 2):
+                if (numAngles != 16):
+                    self.report({"WARNING"}, "To use this angle style you must use EXACTLY 16 angles")
+                    return {"CANCELLED"}
+                angleOutput = angle_style_doom16[angle]
+            if (bpy.context.scene.sprite_anglestyle == 3):
+                angleOutput = str(angle + 1)
+
+            #Render this frame
+            bpy.context.scene.render.filepath = ("%s%s%s%s" % (path, prefix, framename, angleOutput))
+            #bpy.context.scene.render.filepath = ("%s%s%s%i" % (path, prefix, frame, angleOutput))
+            bpy.ops.render.render(animation=False, write_still=True)
+            
+            # Rotate the object
+            bpy.ops.transform.rotate(value=angleInc, orient_axis='Z', orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, False, True), mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.620921, use_proportional_connected=False, use_proportional_projected=False)
+        
+        # Go to next frame
+        bpy.context.scene.frame_current += 1
+        currentFrame += 1 # do we need this?
+    
+    # reset frame
+    bpy.context.scene.frame_current = startFrame
 
 
 # Create Operators
@@ -280,6 +286,25 @@ class Create_SC_Operator(bpy.types.Operator):
         Create_SC(self, context)
         return {'FINISHED'}
     
+class Set_AA_On_Operator(bpy.types.Operator):
+    """Set Anti-Aliasing(filter-size) to default"""
+    bl_idname = "spriterender.setaaon"
+    bl_label = "AA On"
+    
+    def execute(self, context):
+        Set_AA_On(self, context)
+        return {'FINISHED'}
+
+class Set_AA_Off_Operator(bpy.types.Operator):
+    """Set Anti-Aliasing(filter-size) to minimum(0.01)"""
+    bl_idname = "spriterender.setaaoff"
+    bl_label = "AA Off"
+    
+    def execute(self, context):
+        Set_AA_Off(self, context)
+        return {'FINISHED'}
+    
+    
 
 
 
@@ -366,6 +391,13 @@ class SpriteRenderPanel(bpy.types.Panel):
         row.label(text="Resolution:")
         row.prop(resolution, "resolution_x")
         row.prop(resolution, "resolution_y")
+        
+#        row = layout.row(align=True)
+#        row.label(text="Anti-aliasing (filter size)")
+#        row.label(text=str(bpy.context.scene.render.filter_size))
+#        row = layout.row(align=True)
+#        row.operator("spriterender.setaaon")
+#        row.operator("spriterender.setaaoff")
 
         # Execute render
         row = layout.row()
@@ -387,7 +419,9 @@ spriterenderer_classes = [
     Do_Render_Operator,
     Create_RO_Operator,
     Create_SC_Operator,
-    SpriteRenderPanel
+    SpriteRenderPanel,
+    Set_AA_On_Operator,
+    Set_AA_Off_Operator
 ]
 
 # Register
@@ -422,14 +456,6 @@ def register():
         name = 'Angle Style',
         default = 1,
     )
-#    bpy.types.Scene.sprite_framestyle = bpy.props.EnumProperty(
-#        name = 'Frame Style',
-#        default = FRAME_STYLES.DOOM,
-#    )
-#    bpy.types.Scene.sprite_anglestyle = bpy.props.EnumProperty(
-#        name = 'Angle Style',
-#        default = ANGLE_STYLES.DOOM8,
-#    )
     # Classes
     for blender_class in spriterenderer_classes:
         bpy.utils.register_class(blender_class)
