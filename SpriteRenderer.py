@@ -392,12 +392,12 @@ class SpriteRenderPanel(bpy.types.Panel):
         row.prop(resolution, "resolution_x")
         row.prop(resolution, "resolution_y")
         
-#        row = layout.row(align=True)
-#        row.label(text="Anti-aliasing (filter size)")
-#        row.label(text=str(bpy.context.scene.render.filter_size))
-#        row = layout.row(align=True)
-#        row.operator("spriterender.setaaon")
-#        row.operator("spriterender.setaaoff")
+        row = layout.row(align=True)
+        row.label(text="Anti-aliasing (filter size)")
+        row.label(text=str(bpy.context.scene.render.filter_size))
+        row = layout.row(align=True)
+        row.operator("spriterender.setaaon")
+        row.operator("spriterender.setaaoff")
 
         # Execute render
         row = layout.row()
