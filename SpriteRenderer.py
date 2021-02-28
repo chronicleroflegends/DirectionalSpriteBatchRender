@@ -16,9 +16,17 @@ bl_info = {
 # Created: 2021
 import bpy
 from math import pi
+import enum
 
+# === Constants =======================================================
+frame_style_letter = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+frame_style_number = '1_2_3_4_5_6_7_8_...'
+angle_style_doom8 = '12345678'
+angle_style_doom16 = '192A3B4C5D6E7F8G'
+   
 # === Variables =======================================================
-
+frame_style_text = frame_style_letter
+angle_style_text = angle_style_doom8
 
 # === Create Operators ================================================
 
@@ -34,6 +42,21 @@ def Set_Angle_8(context):
     
 def Set_Angle_16(context):
     bpy.context.scene.sprite_angles = 16
+    
+def Set_FrameStyle_Letter(context):
+    bpy.context.scene.sprite_framestyle = 1
+    
+def Set_FrameStyle_Number(context):
+    bpy.context.scene.sprite_framestyle = 2
+    
+def Set_AngleStyle_Doom8(context):
+    bpy.context.scene.sprite_anglestyle = 1
+
+def Set_AngleStyle_Doom16(context):
+    bpy.context.scene.sprite_anglestyle = 2
+    
+def Set_AngleStyle_Simple(context):
+    bpy.context.scene.sprite_anglestyle = 3
     
 def Create_RO(self, context):
     # store reference to active object
@@ -103,18 +126,37 @@ def Do_Render(self, context):
     #filename = ("%s%s%s%i" % (path, prefix, framename, angle))
     
     # sanity checks
-    if ((endFrame - startFrame) > 26):
-        self.report({"WARNING"}, "Too many frames in this animation (26+). Try splitting  it into multiple.")
-        return {"CANCELLED"}
+    if (bpy.context.scene.sprite_framestyle == 1):
+        if ((endFrame - startFrame) > 26):
+            self.report({"WARNING"}, "Too many frames in this animation (26+). Try splitting  it into multiple.")
+            return {"CANCELLED"}
     else:
         #iterate through frames
         for frame in range (startFrame, (endFrame+1)):
-            framename = bpy.context.scene.sprite_framenames[currentFrame]
+            # Decide the frame name
+            #framename = bpy.context.scene.sprite_framenames[currentFrame]
+            if (bpy.context.scene.sprite_framestyle == 1):
+                framename = frame_style_letter[currentFrame]
+            if (bpy.context.scene.sprite_framestyle == 2):
+                framename = str(currentFrame) + '_'
             
             for angle in range (0, numAngles):
-                # Render this frame
-                angleOutput = angle + 1
-                bpy.context.scene.render.filepath = ("%s%s%s%i" % (path, prefix, framename, angleOutput))
+                # Decide the angle name
+                if (bpy.context.scene.sprite_anglestyle == 1):
+                    if (numAngles != 8):
+                        self.report({"WARNING"}, "To use this angle style you must use EXACTLY 8 angles")
+                        return {"CANCELLED"}
+                    angleOutput = angle_style_doom8[angle]
+                if (bpy.context.scene.sprite_anglestyle == 2):
+                    if (numAngles != 16):
+                        self.report({"WARNING"}, "To use this angle style you must use EXACTLY 16 angles")
+                        return {"CANCELLED"}
+                    angleOutput = angle_style_doom16[angle]
+                if (bpy.context.scene.sprite_anglestyle == 3):
+                    angleOutput = str(angle + 1)
+
+                #Render this frame
+                bpy.context.scene.render.filepath = ("%s%s%s%s" % (path, prefix, framename, angleOutput))
                 #bpy.context.scene.render.filepath = ("%s%s%s%i" % (path, prefix, frame, angleOutput))
                 bpy.ops.render.render(animation=False, write_still=True)
                 
@@ -123,7 +165,7 @@ def Do_Render(self, context):
             
             # Go to next frame
             bpy.context.scene.frame_current += 1
-            currentFrame += 1
+            currentFrame += 1 # do we need this?
         
         # reset frame
         bpy.context.scene.frame_current = startFrame
@@ -166,6 +208,51 @@ class Set_Angle_16_Operator(bpy.types.Operator):
         Set_Angle_16(context)
         return {'FINISHED'}
     
+class Set_FrameStyle_Letter_Operator(bpy.types.Operator):
+    """Set frame naming to letters (MAX 26 FRAMES)"""
+    bl_idname = "spriterender.setframestyleletter"
+    bl_label = "Letter"
+    
+    def execute(self, context):
+        Set_FrameStyle_Letter(context)
+        return {'FINISHED'}
+    
+class Set_FrameStyle_Number_Operator(bpy.types.Operator):
+    """Set frame naming to numbers"""
+    bl_idname = "spriterender.setframestylenumber"
+    bl_label = "Number"
+    
+    def execute(self, context):
+        Set_FrameStyle_Number(context)
+        return {'FINISHED'}
+    
+class Set_AngleStyle_Doom8_Operator(bpy.types.Operator):
+    """Set angle naming to doom 8 sided default (ZDoom)"""
+    bl_idname = "spriterender.setanglestyledoom8"
+    bl_label = "Doom 8 Dir"
+
+    def execute(self, context):
+        Set_AngleStyle_Doom8(context)
+        return {'FINISHED'}
+    
+class Set_AngleStyle_Doom16_Operator(bpy.types.Operator):
+    """Set angle naming to doom 16 sided default (ZDoom)"""
+    bl_idname = "spriterender.setanglestyledoom16"
+    bl_label = "Doom 16 Dir"
+
+    def execute(self, context):
+        Set_AngleStyle_Doom16(context)
+        return {'FINISHED'}
+    
+class Set_AngleStyle_Simple_Operator(bpy.types.Operator):
+    """Set angle naming to simple numbered"""
+    bl_idname = "spriterender.setanglestylesimple"
+    bl_label = "Simple"
+
+    def execute(self, context):
+        Set_AngleStyle_Simple(context)
+        return {'FINISHED'}
+    
 class Do_Render_Operator(bpy.types.Operator):
     """Render the animation with current settings"""
     bl_idname = "spriterender.render"
@@ -192,6 +279,8 @@ class Create_SC_Operator(bpy.types.Operator):
     def execute(self, context):
         Create_SC(self, context)
         return {'FINISHED'}
+    
+
 
 
 # === Create Panel ====================================================
@@ -236,7 +325,37 @@ class SpriteRenderPanel(bpy.types.Panel):
         row.prop(context.scene, 'sprite_angles')
 
         row = layout.row(align=True)
-        row.prop(context.scene, 'sprite_framenames')
+        row.label(text="Frame Style:")
+        if (bpy.context.scene.sprite_framestyle == 1):
+            row.label(text="Letter (max 26 frames)")
+            row.label(text=frame_style_letter)
+        if (bpy.context.scene.sprite_framestyle == 2):
+            row.label(text="Number")
+            row.label(text="%s" %(frame_style_number))
+            
+        row = layout.row(align=True)
+        row.operator("spriterender.setframestyleletter")
+        row.operator("spriterender.setframestylenumber")
+        
+        row = layout.row(align=True)
+        row.label(text="Angle Style:")
+        if (bpy.context.scene.sprite_anglestyle == 1):
+            row.label(text="Doom 8 Dir")
+            row.label(text=angle_style_doom8)
+        if (bpy.context.scene.sprite_anglestyle == 2):
+            row.label(text="Doom 16 Dir")
+            row.label(text=angle_style_doom16)
+        if (bpy.context.scene.sprite_anglestyle == 3):
+            row.label(text="Simple")
+            row.label(text="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ...")
+            
+        row = layout.row(align=True)
+        row.operator("spriterender.setanglestyledoom8")
+        row.operator("spriterender.setanglestyledoom16")
+        row.operator("spriterender.setanglestylesimple")
+        #row.label(text=angle_style_text)
+        
+        #row.prop(context.scene, 'sprite_framenames')
 
         row = layout.row(align=True)
         row.label(text="Animation:")
@@ -260,6 +379,11 @@ spriterenderer_classes = [
     Set_Angle_1_Operator,
     Set_Angle_8_Operator,
     Set_Angle_16_Operator,
+    Set_FrameStyle_Letter_Operator,
+    Set_FrameStyle_Number_Operator,
+    Set_AngleStyle_Doom8_Operator,
+    Set_AngleStyle_Doom16_Operator,
+    Set_AngleStyle_Simple_Operator,
     Do_Render_Operator,
     Create_RO_Operator,
     Create_SC_Operator,
@@ -286,6 +410,26 @@ def register():
         name = "Frame names",
         default = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     )
+    bpy.types.Scene.sprite_anglenames = bpy.props.StringProperty(
+        name = "Angle names",
+        default = '12345678'
+    )
+    bpy.types.Scene.sprite_framestyle = bpy.props.IntProperty(
+        name = 'Frame Style',
+        default = 1,
+    )
+    bpy.types.Scene.sprite_anglestyle = bpy.props.IntProperty(
+        name = 'Angle Style',
+        default = 1,
+    )
+#    bpy.types.Scene.sprite_framestyle = bpy.props.EnumProperty(
+#        name = 'Frame Style',
+#        default = FRAME_STYLES.DOOM,
+#    )
+#    bpy.types.Scene.sprite_anglestyle = bpy.props.EnumProperty(
+#        name = 'Angle Style',
+#        default = ANGLE_STYLES.DOOM8,
+#    )
     # Classes
     for blender_class in spriterenderer_classes:
         bpy.utils.register_class(blender_class)
