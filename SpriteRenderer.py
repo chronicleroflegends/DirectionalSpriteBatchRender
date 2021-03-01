@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Chrono's Directional Sprite Batch Render",
     "author": "Chronicler of Legends",
-    "version": (1, 1),
+    "version": (1, 2),
     "blender": (2, 90, 1),
     "location": "Properties > Output > Chrono's Directional Sprite Renderer",
     "description": "Toolset for creating sprites for 2.5d games.",
