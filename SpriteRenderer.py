@@ -40,6 +40,12 @@ def Set_AA_On(self, context):
 def Set_AA_Off(self, context):
     bpy.context.scene.render.filter_size = 0.01
     
+def Set_Clockwise(self, context):
+    bpy.context.scene.sprite_direction = 1
+    
+def Set_CClockwise(self, context):
+    bpy.context.scene.sprite_direction = -1
+    
 def Set_Angle_1(context):
     bpy.context.scene.sprite_angles = 1
     
@@ -127,7 +133,7 @@ def Do_Render(self, context):
     path = bpy.context.scene.sprite_export_path
     prefix = bpy.context.scene.sprite_prefix
     numAngles = bpy.context.scene.sprite_angles
-    angleInc = ((pi * (360/numAngles))/180) # Formula (Angle to increase = 360 / steps) then change degrees to radians
+    angleInc = (((pi * (360/numAngles))/180) * bpy.context.scene.sprite_direction) # Formula (Angle to increase = 360 / steps) then change degrees to radians
     #framename = bpy.context.scene.sprite_framenames[currentFrame]
     #filename = ("%s%s%s%i" % (path, prefix, framename, angle))
     
@@ -304,7 +310,23 @@ class Set_AA_Off_Operator(bpy.types.Operator):
         Set_AA_Off(self, context)
         return {'FINISHED'}
     
+class Set_Clockwise_Operator(bpy.types.Operator):
+    """Set rotation direction to clockwise"""
+    bl_idname = "spriterender.setcw"
+    bl_label = "Clockwise"
     
+    def execute(self, context):
+        Set_Clockwise(self, context)
+        return {'FINISHED'}
+    
+class Set_CClockwise_Operator(bpy.types.Operator):
+    """Set rotation direction to conter-clockwise"""
+    bl_idname = "spriterender.setccw"
+    bl_label = "Counter-Clockwise"
+    
+    def execute(self, context):
+        Set_CClockwise(self, context)
+        return {'FINISHED'}
 
 
 
@@ -398,6 +420,15 @@ class SpriteRenderPanel(bpy.types.Panel):
         row = layout.row(align=True)
         row.operator("spriterender.setaaon")
         row.operator("spriterender.setaaoff")
+        
+        row = layout.row(align=True)
+        row.label(text="Direction:")
+        if (bpy.context.scene.sprite_direction == 1):
+            row.label(text="Clockwise")
+        else:
+            row.label(text="Counter-Clockwise")
+        row.operator("spriterender.setcw")
+        row.operator("spriterender.setccw")
 
         # Execute render
         row = layout.row()
@@ -421,7 +452,9 @@ spriterenderer_classes = [
     Create_SC_Operator,
     SpriteRenderPanel,
     Set_AA_On_Operator,
-    Set_AA_Off_Operator
+    Set_AA_Off_Operator,
+    Set_Clockwise_Operator,
+    Set_CClockwise_Operator
 ]
 
 # Register
@@ -454,6 +487,10 @@ def register():
     )
     bpy.types.Scene.sprite_anglestyle = bpy.props.IntProperty(
         name = 'Angle Style',
+        default = 1,
+    )
+    bpy.types.Scene.sprite_direction = bpy.props.IntProperty(
+        name = 'Rotation Direction',
         default = 1,
     )
     # Classes
