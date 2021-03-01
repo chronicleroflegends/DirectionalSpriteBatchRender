@@ -57,6 +57,7 @@
 * Animation - Set your start and end frames for your animation here. I would recommend rendering out each animation 1 at a time and giving them each a unique prefix instead of doing all of the objects animations at once.
 * Resolution - This just does the same thing that the dimension controls higher up in the output properties do. I just duplicated them here for conveniance.
 * Anti-Aliasing - a simple toggle between minimum and default anti-aliasing. Useful if you want the 'Crunchy Pixel' look instead of blurry.
+* Direction - Direction to rotate the object when rendering.
 * Render - This sets it all in motion. Remember, don't get scared when Blender stops responding! Its just working to get all that rendering done for you in the background.
 
 ### License:
