@@ -34,8 +34,11 @@
  12) Change these settings for a test render:
      * Sprite Export Path: Create a new folder to put your test sprites in. When you click render all the generated sprites will appear in this folder.
      * Angles to Render: Click on '8 Dir' for now, I will explain the other options in a bit.
+     * Frame Style: Click 'Letter' for now.
+     * Angle Style: Click 'Doom 8 Dir' for now.
      * Animation: This is probably set to some absurdly high number. Change it to 'Start Frame 1' 'End Frame 1'
      * Resolution: Set this to 800px by 800px
+     * Leave AA set to 1.5
  13) You are ready to render! This is **VERY IMPORTANT**: Click the circle 'RotationOrigin' and then click the big render button. If you don't click the RotationOrigin first, your renders will probably come out aligned wierd. The addon expects it to be the active object when it starts rendering.
  14) Oh no! Nothing changed on the screen and Blender isn't responding! If I click on anything I just get the frozen hourglass of doom! 
  You are fine, don't worry. The rendering is happening as a background process, so you cannot see anything happening. Depending on the complexity of this scene this may continue for a while. (The objects I was using to test took about 3 minutes. The default cube should only halt things for about half a minute.) When Blender starts responding again go look in the folder you specified in step 12. You should see 8 images of the cube from different angles. Success!
@@ -49,9 +52,11 @@
 * Sprite Prefix - This is the general name of your sprites. All the generated sprites will start with this prefix. It's default is 'SPRI' because it is setup in ZDoom's sprite format, which is: SPRIA1 - Prefix|Frame|Angle. In the ZDoom engine, the prefix can only be 4 characters, if you are using this for any other game engine, feel free to use as many characters as you want for the prefix.
 * Angles to render - How many directions do you want to render the object from? 1 Direction will only give you the camera view for each frame. 8 direction gives you the standard doom billboard sprites. 16 Dir gives a more detailed billboard sprite.
 * Custom Angles - This just directly sets the angles to render. Some examples of what you could set this to would be 2 for a sidescroller, or 4 for an isometric top-down RPG.
-* Frame Names - When the images are saved, letters are used instead of numbers. This is because of the Doom sprite format again. Frames are designated by letters and angles by numbers. If enough people tell me they need more frames of animation than there are letters of the alphabet, I'll make a toggle that swaps the two around.
+* Frame Style - Frame format for output. Set to letter or number. Letter conforms to Doom/Zdoom format but you are limited to 26 frames. Number gives a frame number and separates it from the angle with an underscore.
+* Angle Style - Angle format for output. Doom 8 and 16 direction automatically names angles to work in Doom/Zdoom. Simple just numbers the angles sequentially.
 * Animation - Set your start and end frames for your animation here. I would recommend rendering out each animation 1 at a time and giving them each a unique prefix instead of doing all of the objects animations at once.
 * Resolution - This just does the same thing that the dimension controls higher up in the output properties do. I just duplicated them here for conveniance.
+* Anti-Aliasing - a simple toggle between minimum and default anti-aliasing. Useful if you want the 'Crunchy Pixel' look instead of blurry.
 * Render - This sets it all in motion. Remember, don't get scared when Blender stops responding! Its just working to get all that rendering done for you in the background.
 
 ### License:
